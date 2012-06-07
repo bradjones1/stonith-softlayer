@@ -15,28 +15,49 @@ $conf = array();
 get_arguments($conf);
 
 if (isset($conf['action'])) {
-	if (!($client = sl_client($conf))) {
-		exit(1);
-	}
 	switch ($conf['action']) {
 		case 'off':
 			// Uses IPMI
-			$s = sl_power_off($client);
+			$s = sl_power_off(sl_client($conf));
 			exit($s);
 			break;
 		
 		case 'on':
 			// Uses IPMI
-			$s = sl_power_on($client);
+			$s = sl_power_on(sl_client($conf));
 			exit($s);
 			break;
 		
 		case 'reboot':
 			// Via powerstrip
-			$s = sl_power_cycle($client);
+			$s = sl_power_cycle(sl_client($conf));
 			exit($s);
 			break;
 		
+		case 'getconfignames':
+			$opts = array('apiuser', 'apikey', 'endpoint', 'serverid', 'servertype');
+			foreach ($opts as $o) {
+				print "{$o}\n";
+			}
+			exit(0);
+			break;
+		
+		case 'getinfo-devdescr':
+			print longdesc();
+			exit(0);
+			break;
+		
+		case 'getinfo-devurl':
+			print 'https://github.com/bradjones1/stonith-softlayer';
+			exit(0);
+			break;
+		
+		case 'getinfo-devname':
+			print 'Softlayer API Stonith Device';
+			exit(0);
+			break;
+		
+		case 'getinfo-xml':
 		case 'metadata':
 			print metadata();
 			exit(0);
@@ -45,7 +66,7 @@ if (isset($conf['action'])) {
 		default:
 		case 'monitor':
 		case 'status':
-			$s = sl_power_state($client);
+			$s = sl_power_state(sl_client($conf));
 			exit($s);
 			break;
 	}
@@ -54,11 +75,24 @@ if (isset($conf['action'])) {
 }
 
 function get_arguments(&$conf) {
+	// From STDIN
+	stream_set_blocking(STDIN, 0);
 	while($line = trim(fgets(STDIN))) {
 		$line = trim($line);
 		if (substr($line, 0, 1) != '#') {
 			$thisline = explode('=', $line, 2);
 			$conf[$thisline[0]] = $thisline[1];
+		}
+	}
+	
+	// From CLI
+	global $argv;
+	if (count($argv) > 1) {
+		array_shift($argv);
+		foreach ($argv as $a) {
+			if (substr($a, 0, 1) != '-') {
+				$conf['action'] = $a;
+			}
 		}
 	}
 }
@@ -71,11 +105,7 @@ function sl_client($conf) {
 	$endpoint = isset($conf['endpoint']) ? $conf['endpoint'] : SoftLayer_SoapClient::API_PRIVATE_ENDPOINT;
 	$servertype = isset($conf['servertype']) ? $conf['servertype'] : 'SoftLayer_Hardware_Server';
 	// Make a connection to the SoftLayer_Hardware_Server service.
-	if ($client = SoftLayer_SoapClient::getClient($servertype,
-																						$conf['serverid'],
-																						$conf['apiuser'],
-																						$conf['apikey'],
-																						$endpoint)) {
+	if ($client = SoftLayer_SoapClient::getClient($servertype, $conf['serverid'], $conf['apiuser'], $conf['apikey'], $endpoint)) {
 		$objectMask = new SoftLayer_ObjectMask();
 		$client->setObjectMask($objectMask);
 		return $client;
@@ -130,51 +160,54 @@ function sl_power_cycle($client) {
 	return $s;
 }
 
+function longdesc() {
+	$longdesc = <<< EOF
+SoftLayer technologies (Dallas, Texas, USA with datacenters around the world)
+offers IPMI interfaces for servers, which may be power-cycled using the
+external/ipmi plugin.  However these IPMI cards utilize the same power supply
+as the server itself, which is not recommended.  Use this STONITH plugin to
+make a call to the Softlayer API to power cycle the machine.
+
+Note only the "reboot" method uses the power strip; 'on' and 'off' use IPMI
+per the API documentation.
+EOF;
+
+	return $longdesc;
+}
+
 function metadata() {
 	$metadata = <<< EOF
-	<?xml version="1.0" ?>
-	<resource-agent name="softlayer" shortdesc="Fence agent for Softlayer servers and cloud instances">
-	<longdesc>
-	SoftLayer technologies (Dallas, Texas, USA with datacenters around the world)
-	offers IPMI interfaces for servers, which may be power-cycled using the
-	external/ipmi plugin.  However these IPMI cards utilize the same power supply
-	as the server itself, which is not recommended.  Use this STONITH plugin to
-	make a call to the Softlayer API to power cycle the machine.
-	
-	Note only the "reboot" method uses the power strip; 'on' and 'off' use IPMI
-	per the API documentation.</longdesc>
-		
-	<parameters>
-	<parameter name="apiuser" unique="1">
-	<content type="string" />
-	<shortdesc lang="en">API user</shortdesc>
-	</parameter>
-	<parameter name="apikey" unique="1">
-	<content type="string" />
-	<shortdesc lang="en">API Key</shortdesc>
-	</parameter>
-	<parameter name="servertype" unique="1">
-	<content type="string" />
-	<shortdesc lang="en">Server type - defaults to dedicated, pass 'SoftLayer_Virtual_Guest' for cloud</shortdesc>
-	</parameter>
-	<parameter name="endpoint" unique="1">
-	<content type="string" />
-	<shortdesc lang="en">Endpoint URL; defaults to private network</shortdesc>
-	</parameter>
-	<parameter name="serverid" unique="1">
-	<content type="integer" />
-	<shortdesc lang="en">Server or instance ID</shortdesc>
-	</parameter>
-	</parameters>
-	<actions>
-	<action name="on" />
-	<action name="off" />
-	<action name="reboot" />
-	<action name="status" />
-	<action name="monitor" />
-	<action name="metadata" />
-	</actions>
-	</resource-agent>
+<parameters>
+<parameter name="apiuser" unique="1">
+<content type="string" />
+<shortdesc lang="en">API user</shortdesc>
+</parameter>
+<parameter name="apikey" unique="1">
+<content type="string" />
+<shortdesc lang="en">API Key</shortdesc>
+</parameter>
+<parameter name="servertype" unique="1">
+<content type="string" />
+<shortdesc lang="en">Server type - defaults to dedicated, pass 'SoftLayer_Virtual_Guest' for cloud</shortdesc>
+</parameter>
+<parameter name="endpoint" unique="1">
+<content type="string" />
+<shortdesc lang="en">Endpoint URL; defaults to private network</shortdesc>
+</parameter>
+<parameter name="serverid" unique="1">
+<content type="integer" />
+<shortdesc lang="en">Server or instance ID</shortdesc>
+</parameter>
+</parameters>
+<actions>
+<action name="on" />
+<action name="off" />
+<action name="reboot" />
+<action name="status" />
+<action name="monitor" />
+<action name="metadata" />
+</actions>
+</resource-agent>
 
 EOF;
 	
