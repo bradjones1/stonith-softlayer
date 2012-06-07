@@ -12,7 +12,7 @@
 require_once(dirname(__FILE__) . '/SoftLayer/SoapClient.class.php');
 
 $conf = array();
-$opts = array('apiuser', 'apikey', 'endpoint', 'serverid', 'servertype');
+$opts = array('apiuser', 'apikey', 'endpoint', 'serverid', 'servertype', 'hostname');
 get_arguments($conf, $opts);
 
 if (isset($conf['action'])) {
@@ -33,6 +33,11 @@ if (isset($conf['action'])) {
 			// Via powerstrip
 			$s = sl_power_cycle(sl_client($conf));
 			exit($s);
+			break;
+		
+		case 'gethosts':
+			print $conf['hostname'];
+			exit(0);
 			break;
 		
 		case 'getconfignames':
@@ -218,6 +223,10 @@ function metadata() {
 <parameter name="serverid" unique="1">
 <content type="integer" />
 <shortdesc lang="en">Server or instance ID</shortdesc>
+</parameter>
+<parameter name="serverid" unique="1">
+<content type="integer" />
+<shortdesc lang="en">Hostname to fence</shortdesc>
 </parameter>
 </parameters>
 EOF;
