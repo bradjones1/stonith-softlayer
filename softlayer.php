@@ -8,8 +8,6 @@
  *
  */
 
-define('SANDBOX', 'api-sandbox.service.softlayer.com');
-
 // Softlayer library
 require_once(dirname(__FILE__) . '/SoftLayer/SoapClient.class.php');
 
