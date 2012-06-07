@@ -90,6 +90,13 @@ function get_arguments(&$conf, $opts) {
 		}
 	}
 	
+	// From globals (Ubuntu, perhaps other flavors -- cluster-glue)
+	foreach ($opts as $o) {
+		if (isset($_SERVER[$o])) {
+			$conf[$o] = $_SERVER[$o];
+		}
+	}
+	
 	// From CLI
 	global $argv;
 	if (count($argv) > 1) {
