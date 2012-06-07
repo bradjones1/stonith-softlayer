@@ -64,11 +64,14 @@ if (isset($conf['action'])) {
 			exit(0);
 			break;
 		
-		default:
 		case 'monitor':
 		case 'status':
 			$s = sl_power_state(sl_client($conf));
 			exit($s);
+			break;
+		
+		default:
+			exit(1);
 			break;
 	}
 } else {
