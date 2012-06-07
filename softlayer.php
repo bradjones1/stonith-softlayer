@@ -60,6 +60,7 @@ if (isset($conf['action'])) {
 		
 		case 'getinfo-xml':
 		case 'metadata':
+		case 'meta-data':
 			print metadata();
 			exit(0);
 			break;
@@ -210,16 +211,6 @@ function metadata() {
 <shortdesc lang="en">Server or instance ID</shortdesc>
 </parameter>
 </parameters>
-<actions>
-<action name="on" />
-<action name="off" />
-<action name="reboot" />
-<action name="status" />
-<action name="monitor" />
-<action name="metadata" />
-</actions>
-</resource-agent>
-
 EOF;
 	
 	return $metadata;
