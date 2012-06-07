@@ -52,6 +52,7 @@ if (isset($conf['action'])) {
 			exit(0);
 			break;
 		
+		case 'getinfo-devid':
 		case 'getinfo-devname':
 			print 'Softlayer API Stonith Device';
 			exit(0);
