@@ -133,9 +133,11 @@ function sl_power_state($client) {
 		return 1;
 	}
 	
-	// Returns 'on' or 'off'
-	$state = ($server == 'on') ? 0 : 1;
-	return $state;
+	// If we get to this point, we were successful and talked to API.
+	// Stonith doesn't care if the node is up or down, just that we know
+	if ($server == 'on' || $server == 'off') {
+		return 0;
+	}
 }
 
 function sl_power_off($client) {
@@ -190,19 +192,19 @@ EOF;
 function metadata() {
 	$metadata = <<< EOF
 <parameters>
-<parameter name="apiuser" unique="1">
+<parameter name="apiuser" unique="0">
 <content type="string" />
 <shortdesc lang="en">API user</shortdesc>
 </parameter>
-<parameter name="apikey" unique="1">
+<parameter name="apikey" unique="0">
 <content type="string" />
 <shortdesc lang="en">API Key</shortdesc>
 </parameter>
-<parameter name="servertype" unique="1">
+<parameter name="servertype" unique="0">
 <content type="string" />
 <shortdesc lang="en">Server type - defaults to dedicated, pass 'SoftLayer_Virtual_Guest' for cloud</shortdesc>
 </parameter>
-<parameter name="endpoint" unique="1">
+<parameter name="endpoint" unique="0">
 <content type="string" />
 <shortdesc lang="en">Endpoint URL; defaults to private network</shortdesc>
 </parameter>
