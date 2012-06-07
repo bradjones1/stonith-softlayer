@@ -15,11 +15,11 @@ require_once(dirname(__FILE__) . '/SoftLayer/SoapClient.class.php');
 
 $conf = array();
 get_arguments($conf);
-if (!($client = sl_client($conf))) {
-	return 1;
-}
 
 if (isset($conf['action'])) {
+	if (!($client = sl_client($conf))) {
+		return 1;
+	}
 	switch ($conf['action']) {
 		case 'off':
 			// Uses IPMI
@@ -34,6 +34,10 @@ if (isset($conf['action'])) {
 		case 'reboot':
 			// Via powerstrip
 			return sl_power_cycle($client);
+			break;
+		
+		case 'metadata':
+			print metadata();
 			break;
 		
 		default:
@@ -62,8 +66,9 @@ function get_arguments(&$conf) {
 
 function sl_client($conf) {
 	$endpoint = isset($conf['endpoint']) ? $conf['endpoint'] : SoftLayer_SoapClient::API_PRIVATE_ENDPOINT;
+	$servertype = isset($conf['servertype']) ? $conf['servertype'] : 'SoftLayer_Hardware_Server';
 	// Make a connection to the SoftLayer_Hardware_Server service.
-	if ($client = SoftLayer_SoapClient::getClient('SoftLayer_Hardware_Server',
+	if ($client = SoftLayer_SoapClient::getClient($servertype,
 																						$conf['serverid'],
 																						$conf['apiuser'],
 																						$conf['apikey'],
@@ -115,4 +120,55 @@ function sl_power_cycle($client) {
 	}
 	
 	return (int) $server;
+}
+
+function metadata() {
+	$metadata = <<< EOF
+	<?xml version="1.0" ?>
+	<resource-agent name="softlayer" shortdesc="Fence agent for Softlayer servers and cloud instances">
+	<longdesc>
+	SoftLayer technologies (Dallas, Texas, USA with datacenters around the world)
+	offers IPMI interfaces for servers, which may be power-cycled using the
+	external/ipmi plugin.  However these IPMI cards utilize the same power supply
+	as the server itself, which is not recommended.  Use this STONITH plugin to
+	make a call to the Softlayer API to power cycle the machine.
+	
+	Note only the "reboot" method uses the power strip; 'on' and 'off' use IPMI
+	per the API documentation.</longdesc>
+		
+	<parameters>
+	<parameter name="apiuser" unique="1">
+	<content type="string" />
+	<shortdesc lang="en">API user</shortdesc>
+	</parameter>
+	<parameter name="apikey" unique="1">
+	<content type="string" />
+	<shortdesc lang="en">API Key</shortdesc>
+	</parameter>
+	<parameter name="servertype" unique="1">
+	<content type="string" />
+	<shortdesc lang="en">Server type - defaults to dedicated, pass 'SoftLayer_Virtual_Guest' for cloud</shortdesc>
+	</parameter>
+	<parameter name="endpoint" unique="1">
+	<content type="string" />
+	<shortdesc lang="en">Endpoint URL; defaults to private network</shortdesc>
+	</parameter>
+	<parameter name="serverid" unique="1">
+	<content type="integer" />
+	<shortdesc lang="en">Server or instance ID</shortdesc>
+	</parameter>
+	</parameters>
+	<actions>
+	<action name="on" />
+	<action name="off" />
+	<action name="reboot" />
+	<action name="status" />
+	<action name="monitor" />
+	<action name="metadata" />
+	</actions>
+	</resource-agent>
+
+EOF;
+	
+	return $metadata;
 }
