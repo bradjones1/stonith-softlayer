@@ -12,7 +12,8 @@
 require_once(dirname(__FILE__) . '/SoftLayer/SoapClient.class.php');
 
 $conf = array();
-get_arguments($conf);
+$opts = array('apiuser', 'apikey', 'endpoint', 'serverid', 'servertype');
+get_arguments($conf, $opts);
 
 if (isset($conf['action'])) {
 	switch ($conf['action']) {
@@ -35,7 +36,6 @@ if (isset($conf['action'])) {
 			break;
 		
 		case 'getconfignames':
-			$opts = array('apiuser', 'apikey', 'endpoint', 'serverid', 'servertype');
 			foreach ($opts as $o) {
 				print "{$o}\n";
 			}
@@ -78,7 +78,7 @@ if (isset($conf['action'])) {
 	exit(1);
 }
 
-function get_arguments(&$conf) {
+function get_arguments(&$conf, $opts) {
 	// From STDIN
 	stream_set_blocking(STDIN, 0);
 	while($line = trim(fgets(STDIN))) {
@@ -92,9 +92,16 @@ function get_arguments(&$conf) {
 	// From CLI
 	global $argv;
 	if (count($argv) > 1) {
+		// Get rid of filename
 		array_shift($argv);
-		foreach ($argv as $a) {
-			if (substr($a, 0, 1) != '-') {
+		foreach ($argv as $k => $a) {
+			// Note: no legacy support for -p "val1 val2 ... valn" format
+			$thisline = explode('=', $a, 2);
+			if (count($thisline) == 2) {
+				// Overwrites anything we got above
+				$conf[$thisline[0]] = $thisline[1];
+			}
+			else if (substr($a, 0, 1) != '-') {
 				$conf['action'] = $a;
 			}
 		}
