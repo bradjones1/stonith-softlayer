@@ -18,36 +18,41 @@ get_arguments($conf);
 
 if (isset($conf['action'])) {
 	if (!($client = sl_client($conf))) {
-		return 1;
+		exit(1);
 	}
 	switch ($conf['action']) {
 		case 'off':
 			// Uses IPMI
-			return sl_power_off($client);
+			$s = sl_power_off($client);
+			exit($s);
 			break;
 		
 		case 'on':
 			// Uses IPMI
-			return sl_power_on($client);
+			$s = sl_power_on($client);
+			exit($s);
 			break;
 		
 		case 'reboot':
 			// Via powerstrip
-			return sl_power_cycle($client);
+			$s = sl_power_cycle($client);
+			exit($s);
 			break;
 		
 		case 'metadata':
 			print metadata();
+			exit(0);
 			break;
 		
 		default:
 		case 'monitor':
 		case 'status':
-			return sl_power_state($client);
+			$s = sl_power_state($client);
+			exit($s);
 			break;
 	}
 } else {
-	return 1;
+	exit(1);
 }
 
 function get_arguments(&$conf) {
@@ -73,10 +78,11 @@ function sl_client($conf) {
 																						$conf['apiuser'],
 																						$conf['apikey'],
 																						$endpoint)) {
-	$objectMask = new SoftLayer_ObjectMask();
-	$client->setObjectMask($objectMask);return $client;
+		$objectMask = new SoftLayer_ObjectMask();
+		$client->setObjectMask($objectMask);
+		return $client;
 	} else {
-		return 1;
+		return 0;
 	}
 }
 
@@ -98,8 +104,10 @@ function sl_power_off($client) {
 	} catch (Exception $e) {
 		return 1;
 	}
-
-	return (int) $server;
+	
+	// Returns bool; same with two functions below.
+	$s = $server ? 0 : 1;
+	return $s;
 }
 
 function sl_power_on($client) {
@@ -109,7 +117,8 @@ function sl_power_on($client) {
 		return 1;
 	}
 	
-	return (int) $server;
+	$s = $server ? 0 : 1;
+	return $s;
 }
 
 function sl_power_cycle($client) {
@@ -119,7 +128,8 @@ function sl_power_cycle($client) {
 		return 1;
 	}
 	
-	return (int) $server;
+	$s = $server ? 0 : 1;
+	return $s;
 }
 
 function metadata() {
