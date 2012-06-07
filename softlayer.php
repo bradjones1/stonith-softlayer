@@ -224,8 +224,8 @@ function metadata() {
 <content type="integer" />
 <shortdesc lang="en">Server or instance ID</shortdesc>
 </parameter>
-<parameter name="serverid" unique="1">
-<content type="integer" />
+<parameter name="hostname" unique="1">
+<content type="string" />
 <shortdesc lang="en">Hostname to fence</shortdesc>
 </parameter>
 </parameters>
