@@ -222,11 +222,11 @@ function metadata() {
 <content type="string" />
 <shortdesc lang="en">Endpoint URL; defaults to private network</shortdesc>
 </parameter>
-<parameter name="serverid" unique="1">
+<parameter name="serverid" unique="0">
 <content type="integer" />
 <shortdesc lang="en">Server or instance ID</shortdesc>
 </parameter>
-<parameter name="hostname" unique="1">
+<parameter name="hostname" unique="0">
 <content type="string" />
 <shortdesc lang="en">Hostname to fence</shortdesc>
 </parameter>
