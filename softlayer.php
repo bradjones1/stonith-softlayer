@@ -5,12 +5,7 @@
  * <http://github.com/softlayer/softlayer-api-php-client> is installed in the
  * directory '/SoftLayer' in this script's path and that you wish to use the
  * SOAP client instead of our XML-RPC client.
- *
  */
-
-$fh = fopen('/tmp/stonith.log','a');
-fwrite($fh,json_encode($argv) . "\n\n");
-fclose($fh);
 
 // Softlayer library
 require_once(dirname(__FILE__) . '/SoftLayer/SoapClient.class.php');
