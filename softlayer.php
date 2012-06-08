@@ -8,11 +8,15 @@
  *
  */
 
+$fh = fopen('/tmp/stonith.log','a');
+fwrite($fh,json_encode($argv) . "\n\n");
+fclose($fh);
+
 // Softlayer library
 require_once(dirname(__FILE__) . '/SoftLayer/SoapClient.class.php');
 
 $conf = array();
-$opts = array('apiuser', 'apikey', 'endpoint', 'serverid', 'servertype', 'hostname');
+$opts = array('apiuser', 'apikey', 'endpoint', 'serverid', 'servertype', 'hostname', 'hostlist');
 get_arguments($conf, $opts);
 
 if (isset($conf['action'])) {
@@ -29,6 +33,7 @@ if (isset($conf['action'])) {
 			exit($s);
 			break;
 		
+		case 'reset':
 		case 'reboot':
 			// Via powerstrip
 			$s = sl_power_cycle(sl_client($conf));
@@ -42,7 +47,7 @@ if (isset($conf['action'])) {
 		
 		case 'getconfignames':
 			foreach ($opts as $o) {
-				print "{$o}\n";
+				echo $o;
 			}
 			exit(0);
 			break;
@@ -114,7 +119,9 @@ function get_arguments(&$conf, $opts) {
 				// Overwrites anything we got above
 				$conf[$thisline[0]] = $thisline[1];
 			}
-			else if (substr($a, 0, 1) != '-') {
+			// Ignore flags that start with - and don't overwrite action if
+			// We have it already; in effect, ignore subsequent non-delimited CLI opts
+			else if (substr($a, 0, 1) != '-' && !isset($conf['action'])) {
 				$conf['action'] = $a;
 			}
 		}
